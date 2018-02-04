@@ -17,7 +17,7 @@ public class FoodOrderDlqProcessorApplication {
 
 	private static final String X_RETRIES_HEADER = "x-retries";
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
 		SpringApplication.run(FoodOrderDlqProcessorApplication.class, args);
 	}
 
