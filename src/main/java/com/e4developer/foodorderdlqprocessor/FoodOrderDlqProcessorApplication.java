@@ -7,7 +7,14 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.messaging.HeaderBasedMessagingExtractor;
+import org.springframework.integration.config.EnableIntegration;
 
+import java.util.Map;
+
+@EnableIntegration
 @SpringBootApplication
 public class FoodOrderDlqProcessorApplication {
 
@@ -24,8 +31,15 @@ public class FoodOrderDlqProcessorApplication {
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
 
+	@Autowired
+	Tracer tracer;
+
 	@RabbitListener(queues = DLQ)
 	public void rePublish(Message failedMessage) {
+		HeaderBasedMessagingExtractor headerBasedMessagingExtractor = new HeaderBasedMessagingExtractor();
+		MySpanTextMap entries = new MySpanTextMap(failedMessage.getMessageProperties().getHeaders());
+		Span span = headerBasedMessagingExtractor.joinTrace(entries);
+		Span mySpan = tracer.createSpan(":rePublish", span);
 
 		failedMessage = attemptToRepair(failedMessage);
 
@@ -41,6 +55,7 @@ public class FoodOrderDlqProcessorApplication {
 			System.out.println("Writing to databse: "+failedMessage.toString());
 			//we can write to a database or move to a parking lot queue
 		}
+		tracer.close(mySpan);
 	}
 
 	private Message attemptToRepair(Message failedMessage) {
