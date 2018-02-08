@@ -12,8 +12,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.messaging.HeaderBasedMessagingExtractor;
 import org.springframework.integration.config.EnableIntegration;
 
-import java.util.Map;
-
 @EnableIntegration
 @SpringBootApplication
 public class FoodOrderDlqProcessorApplication {
